@@ -7,6 +7,14 @@
     "917709439025@c.us": {
       "name": "Abhiraj",
       "registeredAt": "2025-01-04T08:49:03.124Z"
+    },
+    "918618208532@c.us": {
+      "name": "Spoorthi Hokrana",
+      "registeredAt": "2025-01-04T10:30:56.189Z"
+    },
+    "919535799556@c.us": {
+      "name": "",
+      "registeredAt": "2025-01-04T12:21:41.843Z"
     }
   },
   "friends": {
@@ -23,9 +31,70 @@
         "active": true,
         "addedAt": "ISO-DATE"
       }
+    ],
+    "918618208532@c.us": [
+      {
+        "name": "Abhiraj",
+        "phone": "+91 77094 39025",
+        "dob": "20/05/2002",
+        "address": "A-505 Golden Petals Karvenagar Pune-411052",
+        "interests": [
+          "Christopher Nolan movies",
+          " classic movies",
+          " novels",
+          " travel"
+        ],
+        "active": true,
+        "addedAt": "2025-01-04T10:36:43.944Z"
+      }
+    ],
+    "917709439025@c.us": [
+      {
+        "name": "Test",
+        "phone": "1",
+        "dob": "20/05/2002",
+        "address": "gp",
+        "interests": [
+          "reading"
+        ],
+        "active": true,
+        "addedAt": "2025-01-04T11:32:45.355Z"
+      },
+      {
+        "name": "Spoorthi",
+        "phone": "+918618208532",
+        "dob": "04/06/2003",
+        "address": "Malnad college Hassan",
+        "interests": [
+          "Reading - Dancing"
+        ],
+        "active": true,
+        "addedAt": "2025-01-04T11:48:46.703Z"
+      }
     ]
   },
   "gifts": {
+    "A1B": {
+      "name": "Friendship Journal",
+      "description": "A beautifully crafted journal for documenting shared memories and adventures with friends. Includes prompts and space for photos.",
+      "price": 1499,
+      "category": "home",
+      "imageUrl": "https://source.unsplash.com/random/400x400?gift,handmade"
+    },
+    "C2D": {
+      "name": "Comfort Candle Set",
+      "description": "Hand-poured soy candles with calming scents perfect for creating cozy moments. Set includes three unique fragrances.",
+      "price": 999,
+      "category": "home",
+      "imageUrl": "https://source.unsplash.com/random/400x400?candle,handmade"
+    },
+    "E3F": {
+      "name": "Friendship Tea Collection",
+      "description": "A curated selection of premium teas perfect for sharing conversations and creating moments of connection.",
+      "price": 799,
+      "category": "home",
+      "imageUrl": "https://source.unsplash.com/random/400x400?tea,gift"
+    },
     "categories": {
       "books": [
         "Amazon Kindle",
@@ -44,7 +113,10 @@
       "home": [
         "Smart Home Device",
         "Coffee Maker",
-        "Photo Frame"
+        "Photo Frame",
+        "Friendship Journal",
+        "Comfort Candle Set",
+        "Friendship Tea Collection"
       ]
     }
   },
@@ -56,6 +128,22 @@
       "note": "Happy Birthday!",
       "status": "pending_payment",
       "createdAt": "ISO-DATE"
+    },
+    "ORDER1735990566272": {
+      "userId": "917709439025@c.us",
+      "friendName": "Test",
+      "productId": "E3F",
+      "note": "HappyBirthday!",
+      "status": "pending_payment",
+      "createdAt": "2025-01-04T11:36:06.272Z"
+    },
+    "ORDER1735992274621": {
+      "userId": "917709439025@c.us",
+      "friendName": "Spoorthi",
+      "productId": "E3F",
+      "note": "Hello",
+      "status": "pending_payment",
+      "createdAt": "2025-01-04T12:04:34.621Z"
     }
   }
 }

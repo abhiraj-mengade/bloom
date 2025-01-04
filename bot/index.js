@@ -51,124 +51,173 @@ const handleCancel = async (userId) => {
   return "Operation cancelled. Type !menu to see available options.";
 };
 
+// Add these flow configurations at the top
+const addFriendFlow = {
+  steps: ["name", "phone", "dob", "address", "interests"],
+  prompts: {
+    name: "What's your friend's name? 👤",
+    phone: "Great! What's their phone number? 📱",
+    dob: "When is their birthday? (DD/MM/YYYY) 🎂",
+    address: "What's their address? 📍",
+    interests:
+      "What are their interests? (separate with commas) 💝\n\nSkip by typing '-'",
+  },
+  data: {},
+};
+
+const sendGiftFlow = {
+  steps: ["friend", "product", "note"],
+  prompts: {
+    friend: "Who would you like to send a gift to? 👥",
+    product:
+      "Which gift would you like to send? (Enter Product ID) 🎁\n\nType *!store* to see our collection",
+    note: "Add a personal message for your friend 💝",
+  },
+  data: {},
+};
+
+// Add these additional flows
+const editFriendFlow = {
+  steps: ["name", "field", "value"],
+  prompts: {
+    name: "Which friend would you like to edit? 👥",
+    field:
+      "What would you like to update? Choose a number:\n1️⃣ Phone Number\n2️⃣ Birthday\n3️⃣ Address\n4️⃣ Interests",
+    value: "Please enter the new value 📝",
+  },
+  data: {},
+};
+
+const deactivateFriendFlow = {
+  steps: ["name", "confirm"],
+  prompts: {
+    name: "Which friend would you like to deactivate? 👥",
+    confirm:
+      "Are you sure you want to deactivate this friend? Type 'yes' to confirm or 'no' to cancel",
+  },
+  data: {},
+};
+
+// Update the handleMainMenu function
 const handleMainMenu = async () => {
   return (
     `🌸 *Welcome to Bloom Gifting Agent* 🌸\n\n` +
-    `Here are all available commands:\n\n` +
-    `🌹 *!addfriend* - Add a new friend to your garden\n` +
-    `👥 *!viewfriends* - View your circle of friends\n` +
-    `✏️ *!editfriend* - Update friend's details\n` +
-    `💫 *!deactivate* - Deactivate a friend\n` +
-    `🎁 *!sendgift* - Send a thoughtful gift\n` +
-    `🎂 *!birthdays* - Check upcoming celebrations\n` +
-    `🛍️ *!store* - Browse our gift collection\n` +
-    `❌ *!cancel* - Cancel current operation\n\n` +
+    `Choose an option by typing its number:\n\n` +
+    `1️⃣ Add a Friend\n` +
+    `2️⃣ View Friends\n` +
+    `3️⃣ Send a Gift\n` +
+    `4️⃣ Check Upcoming Events\n` +
+    `5️⃣ Browse Gift Store\n` +
+    `6️⃣ Edit Friend Details\n` +
+    `7️⃣ Deactivate Friend\n` +
+    `8️⃣ Edit Your Profile\n` +
+    `9️⃣ View/Cancel Orders\n\n` +
+    `❌ Type *!cancel* anytime to cancel operation\n\n` +
     `Let's make every moment special! 🌺`
   );
 };
 
-const handleAddFriend = async (message, userId, db) => {
-  const [name, phone, dob, address, interests] = message.body
-    .split(",")
-    .map((item) => item.trim());
+// Add this helper function for flow management
+const handleFlowStep = async (userId, flow, currentStep, message, db) => {
+  const stepIndex = flow.steps.indexOf(currentStep);
+  flow.data[currentStep] = message.body.trim();
 
-  if (!name || !phone || !dob || !address) {
-    return (
-      `🌸 Oops! Please provide all required information:\n\n` +
-      `Format: Name, Phone, DOB (DD/MM/YYYY), Address, Interests(optional)\n\n` +
-      `Example:\n` +
-      `Sarah Smith, +1234567890, 15/03/1990, 123 Bloom St NYC, reading;cooking;travel\n\n` +
-      `Type *!cancel* to go back to menu 🌺`
-    );
+  // If we've reached the last step
+  if (stepIndex === flow.steps.length - 1) {
+    if (flow === addFriendFlow) {
+      // Process friend addition
+      const friend = {
+        name: flow.data.name,
+        phone: flow.data.phone,
+        dob: flow.data.dob,
+        address: flow.data.address,
+        interests:
+          flow.data.interests === "-"
+            ? []
+            : flow.data.interests.split(",").map((i) => i.trim()),
+        active: true,
+        addedAt: new Date().toISOString(),
+      };
+
+      if (!db.friends[userId]) db.friends[userId] = [];
+      db.friends[userId].push(friend);
+      saveDB(db);
+
+      // Clear flow data
+      flow.data = {};
+      userStates.delete(userId);
+
+      return `🌸 Wonderful! ${friend.name} has been added to your garden! 🌺\n\nType *!menu* to continue`;
+    } else if (flow === sendGiftFlow) {
+      // Process gift sending
+      // get friendlist
+      const friendname = db.friends[userId][flow.data.friend - 1];
+      const giftResponse = await handleSendGift(
+        {
+          body:
+            friendname.name + "," + flow.data.product + "," + flow.data.note,
+        },
+        userId,
+        db
+      );
+
+      // Clear flow data
+      flow.data = {};
+      userStates.delete(userId);
+
+      return giftResponse;
+    }
+
+    if (flow === editFriendFlow) {
+      const friend = db.friends[userId]?.find(
+        (f) => f.name.toLowerCase() === flow.data.name.toLowerCase() && f.active
+      );
+      if (!friend) {
+        return "Friend not found. Please try again with a valid friend name.";
+      }
+
+      const fieldMap = {
+        1: "phone",
+        2: "dob",
+        3: "address",
+        4: "interests",
+      };
+
+      const field = fieldMap[flow.data.field];
+      if (!field) {
+        return "Invalid field selection. Please try again.";
+      }
+
+      friend[field] =
+        field === "interests"
+          ? flow.data.value.split(",").map((i) => i.trim())
+          : flow.data.value;
+      saveDB(db);
+      return `🌸 Successfully updated ${friend.name}'s ${field}!\n\nType *2* to view your friends.`;
+    }
+
+    if (flow === deactivateFriendFlow) {
+      if (flow.data.confirm.toLowerCase() !== "yes") {
+        return "Operation cancelled. Your friend remains active.";
+      }
+
+      const friend = db.friends[userId]?.find(
+        (f) => f.name.toLowerCase() === flow.data.name.toLowerCase() && f.active
+      );
+      if (!friend) {
+        return "Friend not found. Please try again with a valid friend name.";
+      }
+
+      friend.active = false;
+      saveDB(db);
+      return `🌸 ${friend.name} has been deactivated from your friend list.`;
+    }
   }
 
-  if (!db.friends[userId]) {
-    db.friends[userId] = [];
-  }
-
-  db.friends[userId].push({
-    name,
-    phone,
-    dob,
-    address,
-    interests: interests ? interests.split(";") : [],
-    active: true,
-    addedAt: new Date().toISOString(),
-  });
-
-  saveDB(db);
-  return (
-    `🌸 Wonderful! ${name} has been added to your garden! 🌺\n\n` +
-    `What would you like to do next?\n` +
-    `🌷 Type *!addfriend* to add another friend\n` +
-    `👥 Type *!viewfriends* to view your friends\n` +
-    `🎁 Type *!sendgift* to send a gift\n` +
-    `📋 Type *!menu* to see all options`
-  );
-};
-
-const handleViewFriends = async (userId, db) => {
-  if (!db.friends[userId] || db.friends[userId].length === 0) {
-    return (
-      `🌸 Your garden is ready for new friends!\n\n` +
-      `Type *!addfriend* to add your first friend 🌺`
-    );
-  }
-
-  const activeFriends = db.friends[userId].filter((friend) => friend.active);
-  return (
-    `🌸 *Your Blooming Circle of Friends* 🌸\n\n` +
-    activeFriends
-      .map(
-        (friend, index) =>
-          `${index + 1}. ✨ *${friend.name}*\n` +
-          `   📱 ${friend.phone}\n` +
-          `   🎂 ${friend.dob}\n` +
-          `   📍 ${friend.address}\n` +
-          `   💝 Interests: ${friend.interests.join(", ") || "None specified"}`
-      )
-      .join("\n\n")
-  );
-};
-
-const handleDeactivateFriend = async (message, userId, db) => {
-  const friendName = message.body.trim();
-  const friendIndex = db.friends[userId].findIndex(
-    (f) => f.name.toLowerCase() === friendName.toLowerCase() && f.active
-  );
-
-  if (friendIndex === -1) {
-    return "Friend not found. Please check the name and try again.";
-  }
-
-  db.friends[userId][friendIndex].active = false;
-  saveDB(db);
-  return `${friendName} has been deactivated from your friend list.`;
-};
-
-const handleEditFriend = async (message, userId, db) => {
-  const [friendName, field, newValue] = message.body
-    .split(",")
-    .map((item) => item.trim());
-
-  const friendIndex = db.friends[userId].findIndex(
-    (f) => f.name.toLowerCase() === friendName.toLowerCase() && f.active
-  );
-
-  if (friendIndex === -1) {
-    return "Friend not found. Please check the name and try again.";
-  }
-
-  const validFields = ["name", "phone", "dob", "address", "interests"];
-  if (!validFields.includes(field.toLowerCase())) {
-    return `Invalid field. You can edit: ${validFields.join(", ")}`;
-  }
-
-  db.friends[userId][friendIndex][field.toLowerCase()] =
-    field.toLowerCase() === "interests" ? newValue.split(";") : newValue;
-
-  saveDB(db);
-  return `Updated ${friendName}'s ${field} successfully!`;
+  // Move to next step
+  const nextStep = flow.steps[stepIndex + 1];
+  userStates.set(userId, { flow, currentStep: nextStep });
+  return flow.prompts[nextStep];
 };
 
 // WhatsApp client setup
@@ -193,10 +242,10 @@ const PAYMENT_LINK_BASE = "https://payment.example.com";
 const ADMIN_NUMBER = "917709439025@c.us"; // Replace with actual admin WhatsApp number
 
 const FESTIVALS = [
-  { name: "Christmas", date: "25/12/2023", type: "festival" },
-  { name: "Valentine's Day", date: "14/02/2024", type: "festival" },
-  { name: "Mother's Day", date: "12/05/2024", type: "festival" },
-  { name: "Father's Day", date: "16/06/2024", type: "festival" },
+  { name: "Christmas", date: "25/12/2025", type: "festival" },
+  { name: "Valentine's Day", date: "14/02/2025", type: "festival" },
+  { name: "Mother's Day", date: "12/05/2025", type: "festival" },
+  { name: "Father's Day", date: "16/06/2025", type: "festival" },
   // Add more festivals as needed
 ];
 
@@ -279,29 +328,28 @@ const handleUpcomingEvents = async (userId, db) => {
   if (events.length === 0) {
     return (
       `🌸 No upcoming celebrations in the next 7 days!\n\n` +
-      `Type *!viewfriends* to see all your friends 🌺`
+      `Type *2️⃣* to see all your friends 🌺`
     );
   }
 
   return (
     `🌸 *Upcoming Celebrations* 🌸\n\n` +
     events
-      .map((event) => {
+      .map((event, index) => {
         const dateStr = event.date.toLocaleDateString("en-US", {
           day: "numeric",
           month: "short",
           year: "numeric",
         });
         return (
-          `${event.type === "birthday" ? "🎂" : "🎉"} *${event.name}*\n` +
+          `${index + 1}️⃣ *${event.name}*\n` +
           `   📅 ${dateStr}\n` +
-          `   ${
-            event.type === "birthday" ? "🎁 Send a gift with !sendgift" : ""
-          }`
+          `   ${event.type === "birthday" ? "🎂" : "🎉"} ${event.type}\n` +
+          `   ${event.type === "birthday" ? "🎁 Type *3️⃣* to send a gift" : ""}`
         );
       })
       .join("\n\n") +
-    `\n\n🛍️ Type *!store* to browse our curated gift collection!`
+    `\n\n🛍️ Type *5️⃣* to browse our curated gift collection!`
   );
 };
 
@@ -354,6 +402,149 @@ const handleCheckStore = async () => {
   return `Visit our store to browse gifts! 🎁\n${STORE_URL}`;
 };
 
+const handleSendGift = async (message, userId, db) => {
+  const [friendName, productId, giftNote] = message.body
+    .split(",")
+    .map((item) => item.trim());
+
+  if (!friendName || !productId || !giftNote) {
+    return (
+      `🌸 Please provide all required information:\n\n` +
+      `Format: FriendName, ProductID, Gift Note\n` +
+      `Example: John Doe, A1B, Happy Birthday! Enjoy your special day!\n\n` +
+      `Type *!cancel* to cancel operation`
+    );
+  }
+
+  // Validate friend exists
+  const friend = db.friends[userId]?.find(
+    (f) => f.name.toLowerCase() === friendName.toLowerCase() && f.active
+  );
+
+  if (!friend) {
+    return (
+      `🌸 Friend not found. Please check the name and try again.\n\n` +
+      `Type *!viewfriends* to see your friend list.`
+    );
+  }
+
+  // Validate product exists
+  const product = db.gifts[productId];
+  if (!product) {
+    return `🌸 Product ID not found. Please check our store:\n${STORE_URL}`;
+  }
+
+  // Create order details
+  const orderId = `ORDER${Date.now()}`;
+
+  // Store order in DB
+  if (!db.orders) db.orders = {};
+  db.orders[orderId] = {
+    userId,
+    friendName,
+    productId,
+    note: giftNote,
+    status: "pending_payment",
+    createdAt: new Date().toISOString(),
+  };
+  saveDB(db);
+
+  // Send confirmation to user
+  const userConfirmation =
+    `🎁 *Your gift order has been placed!* 🌸\n\n` +
+    `Order ID: ${orderId}\n` +
+    `For: ${friendName}\n` +
+    `Gift: ${product.name}\n` +
+    `Note: "${giftNote}"\n\n` +
+    `We'll send you the payment link shortly! 💝`;
+
+  // Send notification to admin
+  const adminNotification =
+    `🌟 *New Gift Order!* 🌟\n\n` +
+    `Order ID: ${orderId}\n` +
+    `Product: ${product.name} (${productId})\n` +
+    `Price: ₹${product.price}\n` +
+    `For: ${friendName}\n` +
+    `Note: "${giftNote}"\n\n` +
+    `Please send payment link using:\n` +
+    `!sendpayment ${orderId} ${product.price}`;
+
+  await whatsapp.sendMessage(ADMIN_NUMBER, adminNotification);
+  return userConfirmation;
+};
+
+// Add new helper functions
+const handleEditProfile = async (message, userId, db) => {
+  const newName = message.body.trim();
+  db.users[userId].name = newName;
+  saveDB(db);
+  return `✨ Your name has been updated to *${newName}*! 🌸\n\nType *!menu* to continue`;
+};
+
+const handleViewOrders = async (userId, db) => {
+  if (!db.orders)
+    return "You don't have any orders yet! 🌸\n\nType *5️⃣* to browse our gift collection";
+
+  const userOrders = Object.entries(db.orders)
+    .filter(
+      ([_, order]) => order.userId === userId && order.status !== "cancelled"
+    )
+    .map(
+      ([orderId, order], index) =>
+        `${index + 1}️⃣ Order ID: *${orderId}*\n` +
+        `   🎁 Gift: ${db.gifts[order.productId].name}\n` +
+        `   👤 For: ${order.friendName}\n` +
+        `   📝 Status: ${order.status}\n` +
+        `   To cancel, type: *!cancelorder ${orderId}*`
+    );
+
+  if (userOrders.length === 0) {
+    return "You don't have any active orders! 🌸\n\nType *5️⃣* to browse our gift collection";
+  }
+
+  return (
+    `🛍️ *Your Orders* 🛍️\n\n` +
+    userOrders.join("\n\n") +
+    `\n\nType the cancel command to cancel any order`
+  );
+};
+
+const handleCancelOrder = async (orderId, userId, db) => {
+  if (!db.orders?.[orderId]) {
+    return "🌸 Order not found. Please check the order ID and try again.";
+  }
+
+  const order = db.orders[orderId];
+  if (order.userId !== userId) {
+    return "🌸 This order doesn't belong to you.";
+  }
+
+  if (order.status === "cancelled") {
+    return "This order is already cancelled.";
+  }
+
+  if (order.status === "completed") {
+    return "🌸 Sorry, completed orders cannot be cancelled.";
+  }
+
+  order.status = "cancelled";
+  saveDB(db);
+
+  // Notify admin
+  const adminMessage =
+    `🚫 *Order Cancelled* 🚫\n\n` +
+    `Order ID: ${orderId}\n` +
+    `Customer: ${db.users[userId].name}\n` +
+    `Product: ${db.gifts[order.productId].name}`;
+  await whatsapp.sendMessage(ADMIN_NUMBER, adminMessage);
+
+  return (
+    `🌸 Your order has been cancelled successfully.\n\n` +
+    `Order ID: ${orderId}\n` +
+    `Type *5️⃣* to browse more gifts!`
+  );
+};
+
 whatsapp.on("message", async (message) => {
   const db = initializeDB();
   const userId = message.from;
@@ -365,17 +556,154 @@ whatsapp.on("message", async (message) => {
     return;
   }
 
-  // Registration flow
+  // Registration check with friendly message
   if (!isRegistered(userId, db)) {
     if (!userStates.has(userId)) {
       userStates.set(userId, "REGISTERING");
       await message.reply(
-        "Welcome to Bloom! 🌸\nPlease enter your name to get started:"
+        `🌸 *Welcome to Bloom!* 🌸\n\n` +
+          `We're excited to help you celebrate life's special moments.\n\n` +
+          `To get started, please share your name with us! 💝`
       );
       return;
     } else if (userStates.get(userId) === "REGISTERING") {
       const response = await handleRegistration(message, userId, db);
       userStates.delete(userId);
+      await message.reply(response);
+      return;
+    }
+  }
+
+  // Handle numeric menu selections for new options
+  if (!userStates.has(userId) && /^[1-9]$/.test(message.body)) {
+    switch (message.body) {
+      case "1":
+        userStates.set(userId, { flow: addFriendFlow, currentStep: "name" });
+        await message.reply(addFriendFlow.prompts.name);
+        return;
+
+      case "2":
+        const friends = db.friends[userId] || [];
+        if (friends.length === 0) {
+          await message.reply(
+            "🌸 You haven't added any friends yet!\n\nType *1* to add your first friend."
+          );
+          return;
+        }
+        const viewResponse =
+          "🌸 *Your Friends* 🌸\n\n" +
+          friends
+            .filter((f) => f.active)
+            .map(
+              (friend, index) =>
+                `${index + 1}️⃣ *${friend.name}*\n` +
+                `   📱 ${friend.phone}\n` +
+                `   🎂 ${friend.dob}\n` +
+                `   📍 ${friend.address}\n` +
+                `   💝 Interests: ${friend.interests.join(", ") || "-"}`
+            )
+            .join("\n\n");
+        await message.reply(viewResponse);
+        return;
+
+      case "3":
+        const activeFriends = (db.friends[userId] || []).filter(
+          (f) => f.active
+        );
+        if (activeFriends.length === 0) {
+          await message.reply(
+            "🌸 You haven't added any friends yet!\n\nType *1* to add your first friend."
+          );
+          return;
+        }
+        userStates.set(userId, { flow: sendGiftFlow, currentStep: "friend" });
+        const friendList =
+          "Choose a friend by typing their number:\n\n" +
+          activeFriends.map((f, i) => `${i + 1}️⃣ ${f.name}`).join("\n");
+        await message.reply(friendList);
+        return;
+
+      case "4":
+        const eventsResponse = await handleUpcomingEvents(userId, db);
+        await message.reply(eventsResponse);
+        return;
+
+      case "5":
+        const storeResponse =
+          "🎁 *Our Gift Collection* 🎁\n\n" +
+          Object.entries(db.gifts)
+            .filter(([key]) => key !== "categories")
+            .map(
+              ([id, gift], index) =>
+                `${index + 1}️⃣ *${id}* - ${gift.name}\n` +
+                `💝 ${gift.description}\n` +
+                `💰 ₹${gift.price}`
+            )
+            .join("\n\n") +
+          "\n\nTo send a gift, type *3️⃣* and follow the prompts!";
+        await message.reply(storeResponse);
+        return;
+
+      case "6":
+        if (!(db.friends[userId] || []).filter((f) => f.active).length) {
+          await message.reply(
+            "🌸 You haven't added any friends yet!\n\nType *1* to add your first friend."
+          );
+          return;
+        }
+        userStates.set(userId, { flow: editFriendFlow, currentStep: "name" });
+        await message.reply(editFriendFlow.prompts.name);
+        return;
+
+      case "7":
+        if (!(db.friends[userId] || []).filter((f) => f.active).length) {
+          await message.reply(
+            "🌸 You haven't added any friends yet!\n\nType *1* to add your first friend."
+          );
+          return;
+        }
+        userStates.set(userId, {
+          flow: deactivateFriendFlow,
+          currentStep: "name",
+        });
+        await message.reply(deactivateFriendFlow.prompts.name);
+        return;
+
+      case "8":
+        userStates.set(userId, "EDITING_PROFILE");
+        await message.reply(
+          `✨ *Edit Your Profile* ✨\n\n` +
+            `Your current name is: *${db.users[userId].name}*\n\n` +
+            `Please enter your new name or type *!cancel* to keep your current name`
+        );
+        return;
+
+      case "9":
+        const ordersResponse = await handleViewOrders(userId, db);
+        await message.reply(ordersResponse);
+        return;
+    }
+  }
+
+  // Handle order cancellation command
+  if (message.body.startsWith("!cancelorder")) {
+    const orderId = message.body.split(" ")[1];
+    const response = await handleCancelOrder(orderId, userId, db);
+    await message.reply(response);
+    return;
+  }
+
+  // Handle flow states
+  if (userStates.has(userId)) {
+    const state = userStates.get(userId);
+    if (state.flow && state.currentStep) {
+      const response = await handleFlowStep(
+        userId,
+        state.flow,
+        state.currentStep,
+        message,
+        db
+      );
       await message.reply(response);
       return;
     }
@@ -440,6 +768,16 @@ whatsapp.on("message", async (message) => {
           "\nType !cancel to cancel operation"
       );
       return;
+
+    case "!sendgift":
+      userStates.set(userId, "SENDING_GIFT");
+      await message.reply(
+        "Please enter the gift details in this format:\n" +
+          "FriendName, ProductID, Gift Note\n" +
+          "Example: John Doe, A1B, Happy Birthday! Enjoy your special day!\n\n" +
+          "Type *!cancel* to cancel operation"
+      );
+      return;
   }
 
   // Handle state-based responses
@@ -471,6 +809,18 @@ whatsapp.on("message", async (message) => {
       userStates.delete(userId);
       await message.reply(orderResponse);
       return;
+
+    case "SENDING_GIFT":
+      const giftResponse = await handleSendGift(message, userId, db);
+      userStates.delete(userId);
+      await message.reply(giftResponse);
+      return;
+
+    case "EDITING_PROFILE":
+      const profileResponse = await handleEditProfile(message, userId, db);
+      userStates.delete(userId);
+      await message.reply(profileResponse);
+      return;
   }
 
   // Default response
@@ -497,11 +847,11 @@ setInterval(async () => {
         `🎂 *Special Birthday Alert!* 🌸\n\n` +
         `✨ ${friend.name}'s birthday is coming up on ${friend.dob}!\n\n` +
         `💝 *Curated Gift Ideas Just for Them:*\n` +
-        recommendations.map((gift, i) => `${i + 1}. 🎁 ${gift}`).join("\n") +
+        recommendations.map((gift, i) => `${i + 1}️⃣ 🎁 ${gift}`).join("\n") +
         `\n\n` +
         `🛍️ *Ready to make their day special?*\n` +
-        `Browse more gifts: ${STORE_URL}\n` +
-        `Or type *!sendgift* to order now!\n\n` +
+        `Type *5️⃣* to browse more gifts\n` +
+        `Or type *3️⃣* to send a gift now!\n\n` +
         `Let's make this birthday unforgettable! 🌺`;
 
       await whatsapp.sendMessage(userId, message);
