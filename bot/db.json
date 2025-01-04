@@ -1,0 +1,61 @@
+{
+  "users": {
+    "userId": {
+      "name": "User Name",
+      "registeredAt": "ISO-DATE"
+    },
+    "917709439025@c.us": {
+      "name": "Abhiraj",
+      "registeredAt": "2025-01-04T08:49:03.124Z"
+    }
+  },
+  "friends": {
+    "userId": [
+      {
+        "name": "Friend Name",
+        "phone": "+1234567890",
+        "dob": "DD/MM/YYYY",
+        "address": "Friend's Address",
+        "interests": [
+          "interest1",
+          "interest2"
+        ],
+        "active": true,
+        "addedAt": "ISO-DATE"
+      }
+    ]
+  },
+  "gifts": {
+    "categories": {
+      "books": [
+        "Amazon Kindle",
+        "Book Store Gift Card"
+      ],
+      "tech": [
+        "Smart Watch",
+        "Wireless Earbuds",
+        "Power Bank"
+      ],
+      "fashion": [
+        "Gift Card",
+        "Wallet",
+        "Watch"
+      ],
+      "home": [
+        "Smart Home Device",
+        "Coffee Maker",
+        "Photo Frame"
+      ]
+    }
+  },
+  "orders": {
+    "ORDER123456789": {
+      "userId": "user-id",
+      "friendName": "Friend Name",
+      "productId": "PROD123",
+      "note": "Happy Birthday!",
+      "status": "pending_payment",
+      "createdAt": "ISO-DATE"
+    }
+  }
+}

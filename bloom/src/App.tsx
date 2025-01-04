@@ -9,7 +9,7 @@ import GiftStore from "./components/GiftStore.tsx";
 import Notifications from "./components/Notifications.tsx";
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   return (
     <Router>
