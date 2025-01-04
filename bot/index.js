@@ -188,9 +188,9 @@ whatsapp.on("ready", () => {
 });
 
 // Add these constants at the top
-const STORE_URL = "https://bloom-gifts.example.com";
+const STORE_URL = "https://bloomstore.neocities.org/";
 const PAYMENT_LINK_BASE = "https://payment.example.com";
-const ADMIN_NUMBER = "admin-number@c.us"; // Replace with actual admin WhatsApp number
+const ADMIN_NUMBER = "917709439025@c.us"; // Replace with actual admin WhatsApp number
 
 const FESTIVALS = [
   { name: "Christmas", date: "25/12/2023", type: "festival" },
