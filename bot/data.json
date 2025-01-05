@@ -1,0 +1,73 @@
+{
+  "users": {
+    "917709439025@c.us": {
+      "name": "Abhiraj",
+      "friends": {
+        "917709439025@c.us": {
+          "name": "Abhiraj",
+          "dob": "20/05/2002",
+          "address": "a 505 golden petals karvenagar pune 411052",
+          "interests": "reading, dancing",
+          "lastUpdated": "2025-01-05T07:05:17.128Z"
+        },
+        "919860264506@c.us": {
+          "name": "priya",
+          "dob": "08/01/1978",
+          "address": "pune",
+          "interests": "singing,watching series,cooking,skincare",
+          "events": [
+            {
+              "type": "birthday",
+              "date": "08/01",
+              "description": "Birthday",
+              "year": "1978",
+              "recurring": true,
+              "id": "birthday-919860264506@c.us",
+              "dateAdded": "2025-01-05T08:18:43.380Z"
+            }
+          ],
+          "lastUpdated": "2025-01-05T08:18:43.380Z"
+        }
+      },
+      "wishlist": [
+        "Iphone"
+      ]
+    },
+    "919860264506@c.us": {
+      "name": "Aditi",
+      "friends": {
+        "919860264506@c.us": {
+          "name": "prisha",
+          "dob": "30/12/2009",
+          "address": "pune",
+          "interests": "gaming,talking,travelling,drawing",
+          "events": [
+            {
+              "type": "birthday",
+              "date": "30/12",
+              "description": "Birthday",
+              "year": "2009",
+              "recurring": true,
+              "id": "birthday-919860264506@c.us",
+              "dateAdded": "2025-01-05T07:58:55.996Z"
+            }
+          ],
+          "lastUpdated": "2025-01-05T07:58:55.997Z"
+        }
+      },
+      "wishlist": [
+        "macbook"
+      ]
+    }
+  },
+  "products": {
+    "P1": {
+      "name": "Product 1",
+      "price": 100
+    },
+    "P2": {
+      "name": "Product 2",
+      "price": 200
+    }
+  }
+}
