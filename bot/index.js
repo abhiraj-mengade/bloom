@@ -480,12 +480,30 @@ Browse more gifts at: https://bloomstore.neocities.org/`;
   }
 };
 
-setInterval(() => {
+const scheduleReminders = () => {
   const now = new Date();
-  if (now.getHours() === 9 && now.getMinutes() === 0) {
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(9, 0, 0, 0); // Set to 9 AM
+
+  const timeUntilNextCheck = tomorrow - now;
+
+  console.log(
+    `Next reminder check scheduled for: ${tomorrow.toLocaleString()}`
+  );
+
+  // Schedule first check
+  setTimeout(() => {
+    // Run the first check
     checkAndSendReminders();
-  }
-}, 60000);
+
+    // Then setup daily interval
+    setInterval(checkAndSendReminders, 24 * 60 * 60 * 1000);
+  }, timeUntilNextCheck);
+};
+
+// Start the reminder scheduler
+scheduleReminders();
 
 whatsapp.on("qr", (qr) => {
   qrcode.generate(qr, { small: true });
@@ -503,7 +521,7 @@ whatsapp.on("message", async (message) => {
   // If user is not registered, handle registration
   if (!user) {
     if (!message.body.startsWith("!register")) {
-      await message.reply(WELCOME_MESSAGE);
+      await whatsapp.sendMessage(message.from, WELCOME_MESSAGE);
       return;
     }
   }
@@ -511,7 +529,8 @@ whatsapp.on("message", async (message) => {
   // Handle commands for registered users
   if (!message.body.startsWith("!")) {
     if (user) {
-      await message.reply(
+      await whatsapp.sendMessage(
+        message.from,
         `🌸 Hi ${user.name}! How can we help you today? Send !help to see what we can do together! ✨`
       );
     }
@@ -539,14 +558,15 @@ whatsapp.on("message", async (message) => {
       // Pass the entire message object and first line args
       const response = await handler(message, firstLineArgs);
       if (response) {
-        await message.reply(response);
+        await whatsapp.sendMessage(message.from, response);
       }
     } catch (error) {
       console.error("Error processing command:", error);
-      await message.reply(`⚠️ Error: ${error.message}`);
+      await whatsapp.sendMessage(message.from, `⚠️ Error: ${error.message}`);
     }
   } else {
-    await message.reply(
+    await whatsapp.sendMessage(
+      message.from,
       "❌ Command not recognized. Use !help to see available commands."
     );
   }
