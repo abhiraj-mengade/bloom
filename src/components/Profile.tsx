@@ -169,12 +169,15 @@ export default function Profile() {
                 >
                   Phone Number
                 </label>
-                <div className="relative">
+                <div className="relative phone-input-container">
                   <PhoneInput
                     country={"us"}
                     value={phone}
                     onChange={(phone) => setPhone(phone)}
                     containerClass="w-full"
+                    searchClass="search-class"
+                    enableSearch={true}
+                    disableSearchIcon={false}
                     inputStyle={{
                       width: "100%",
                       background: "rgba(217, 198, 163, 0.05)",
@@ -193,27 +196,21 @@ export default function Profile() {
                       padding: "0.75rem",
                     }}
                     dropdownStyle={{
+                      width: "350px",
+                      maxHeight: "400px",
                       background: "#FFFFFF",
                       border: "1px solid rgba(119, 140, 109, 0.2)",
                       borderRadius: "0.5rem",
                       boxShadow:
                         "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                      color: "#2E4034",
-                      margin: "0.25rem 0",
-                      width: "300px",
-                      maxHeight: "300px",
-                      overflowY: "auto",
                     }}
-                    countryCodeEditable={false}
-                    enableSearch={true}
                     searchStyle={{
-                      background: "rgba(217, 198, 163, 0.05)",
-                      border: "1px solid rgba(119, 140, 109, 0.2)",
-                      borderRadius: "0.25rem",
-                      color: "#2E4034",
-                      margin: "0.5rem",
-                      padding: "0.5rem",
                       width: "calc(100% - 1rem)",
+                      margin: "0.5rem",
+                      padding: "0.75rem",
+                      border: "1px solid rgba(119, 140, 109, 0.2)",
+                      borderRadius: "0.5rem",
+                      backgroundColor: "rgba(217, 198, 163, 0.05)",
                     }}
                   />
                 </div>
@@ -236,22 +233,33 @@ export default function Profile() {
 
       {/* Global styles */}
       <style>{`
+        .phone-input-container {
+          width: 100%;
+        }
+
+        .react-tel-input {
+          width: 100% !important;
+        }
+
         .react-tel-input .country-list {
+          width: 350px !important;
           background-color: white !important;
           border: 1px solid rgba(119, 140, 109, 0.2) !important;
           border-radius: 0.5rem !important;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-            0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
           margin-top: 0.25rem !important;
-          max-height: 300px !important;
+          max-height: 400px !important;
           overflow-y: auto !important;
           scrollbar-width: thin !important;
           scrollbar-color: #778c6d transparent !important;
+          z-index: 50 !important;
         }
 
         .react-tel-input .country-list .country {
           padding: 0.75rem !important;
           color: #2e4034 !important;
+          display: flex !important;
+          align-items: center !important;
         }
 
         .react-tel-input .country-list .country:hover,
@@ -265,37 +273,29 @@ export default function Profile() {
 
         .react-tel-input .country-list .country .dial-code {
           color: #778c6d !important;
+          margin-left: auto !important;
         }
 
-        .react-tel-input .flag-dropdown {
-          background-color: rgba(217, 198, 163, 0.05) !important;
-          border: 1px solid rgba(119, 140, 109, 0.2) !important;
-          border-right: none !important;
-        }
-
-        .react-tel-input .flag-dropdown.open {
-          background-color: rgba(217, 198, 163, 0.1) !important;
-          border-radius: 0.5rem 0 0 0 !important;
-        }
-
-        .react-tel-input .selected-flag:hover,
-        .react-tel-input .selected-flag:focus {
-          background-color: rgba(217, 198, 163, 0.1) !important;
-          border-radius: 0.5rem 0 0 0.5rem !important;
-        }
-
-        .react-tel-input .country-list .search {
-          background-color: rgba(217, 198, 163, 0.05) !important;
-          border: 1px solid rgba(119, 140, 109, 0.2) !important;
-          border-radius: 0.25rem !important;
-          color: #2e4034 !important;
-          margin: 0.5rem !important;
-          padding: 0.5rem !important;
+        .react-tel-input .search-class {
           width: calc(100% - 1rem) !important;
+          margin: 0.5rem !important;
+          padding: 0.75rem !important;
+          border: 1px solid rgba(119, 140, 109, 0.2) !important;
+          border-radius: 0.5rem !important;
+          background-color: rgba(217, 198, 163, 0.05) !important;
+          color: #2e4034 !important;
+          font-size: 1rem !important;
         }
 
-        .react-tel-input .country-list .search::placeholder {
-          color: rgba(119, 140, 109, 0.5) !important;
+        .react-tel-input .search-class:focus {
+          outline: none !important;
+          border-color: #465947 !important;
+          box-shadow: 0 0 0 2px rgba(70, 89, 71, 0.2) !important;
+        }
+
+        .react-tel-input .country-list .search-box {
+          padding: 0.5rem !important;
+          margin: 0 !important;
         }
 
         .react-tel-input .country-list::-webkit-scrollbar {
@@ -309,6 +309,25 @@ export default function Profile() {
         .react-tel-input .country-list::-webkit-scrollbar-thumb {
           background-color: #778c6d !important;
           border-radius: 3px !important;
+        }
+
+        .react-tel-input .flag-dropdown {
+          border-radius: 0.5rem 0 0 0.5rem !important;
+        }
+
+        .react-tel-input .selected-flag {
+          padding: 0 0.75rem !important;
+          border-radius: 0.5rem 0 0 0.5rem !important;
+        }
+
+        .react-tel-input .selected-flag:hover,
+        .react-tel-input .selected-flag:focus {
+          background-color: rgba(217, 198, 163, 0.1) !important;
+        }
+
+        .react-tel-input .flag-dropdown.open .selected-flag {
+          background-color: rgba(217, 198, 163, 0.1) !important;
+          border-radius: 0.5rem 0 0 0.5rem !important;
         }
       `}</style>
     </div>
