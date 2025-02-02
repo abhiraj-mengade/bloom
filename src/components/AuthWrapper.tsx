@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { AuthChangeEvent } from "@supabase/supabase-js";
 
 const AuthWrapper = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -11,7 +12,7 @@ const AuthWrapper = () => {
 
     // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event: AuthChangeEvent, session) => {
         setIsAuthenticated(!!session);
       }
     );
@@ -36,8 +37,8 @@ const AuthWrapper = () => {
   // Show loading state while checking auth
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen bg-[#2E4034] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#D9C091] border-t-transparent"></div>
+      <div className="min-h-screen bg-dark_slate_gray flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-dutch_white border-t-transparent"></div>
       </div>
     );
   }
