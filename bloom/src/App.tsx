@@ -11,11 +11,15 @@ import AuthWrapper from "./components/AuthWrapper";
 import GiftStore from "./components/GiftStore";
 import Profile from "./components/Profile";
 import Wishlist from "./components/Wishlist";
+import AuthScreen from "./components/AuthScreen";
 
 const App = () => {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<AuthScreen />} />
+
         {/* Protected Routes */}
         <Route
           path="/dashboard"
@@ -51,11 +55,18 @@ const App = () => {
         />
         <Route path="/gift-store" element={<GiftStore />} />
 
-        {/* Public Routes */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* Root route - redirect to dashboard if authenticated, otherwise to login */}
+        <Route
+          path="/"
+          element={
+            <AuthWrapper>
+              <Navigate to="/dashboard" replace />
+            </AuthWrapper>
+          }
+        />
 
-        {/* Catch all route - redirect to dashboard */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* Catch all route - redirect to login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
