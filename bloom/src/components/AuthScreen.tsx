@@ -1,121 +1,172 @@
 import { useState } from "react";
+import { supabase } from "../lib/supabase";
 
-interface AuthScreenProps {
-  onLogin: () => void;
-}
+const AuthScreen = () => {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
-const AuthScreen = ({ onLogin }: AuthScreenProps) => {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [otp, setOtp] = useState("");
-  const [showOtpInput, setShowOtpInput] = useState(false);
-
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowOtpInput(true);
-  };
-
-  const handleVerifyOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    onLogin();
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
+      });
+      if (error) throw error;
+      alert("Check your email for the login link!");
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md mx-auto p-6 sm:p-8 space-y-6 sm:space-y-8">
-        <div className="text-center space-y-2 sm:space-y-3">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
-            bloom
-          </h1>
-          <p className="text-base sm:text-lg text-gray-600">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4"
+      style={{
+        background: `linear-gradient(135deg, #2E4034 0%, #465947 100%)`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="w-full max-w-md bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 space-y-8 border border-[#778C6D]/20">
+        {/* Logo and Tagline */}
+        <div className="text-center space-y-6">
+          <div className="flex flex-col items-center justify-center space-y-3">
+            <h1
+              className="text-6xl font-bold"
+              style={{
+                background: `linear-gradient(135deg, #465947 0%, #2E4034 100%)`,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              bloom
+            </h1>
+            <div className="flex items-center space-x-3">
+              <span className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#778C6D] to-transparent" />
+              <span className="text-sm uppercase tracking-widest text-[#465947] font-medium">
+                nurture connections
+              </span>
+              <span className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#778C6D] to-transparent" />
+            </div>
+          </div>
+          <p className="text-lg font-medium text-[#465947]">
             Connect. Celebrate. Cherish.
           </p>
         </div>
 
-        <form
-          className="space-y-4 sm:space-y-6"
-          onSubmit={showOtpInput ? handleVerifyOtp : handleSendOtp}
-        >
-          <div className="space-y-4">
-            <div>
+        {/* Sign In Form */}
+        <form onSubmit={handleSignIn} className="space-y-6">
+          <div className="space-y-2">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-[#465947]"
+            >
+              Email Address
+            </label>
+            <div className="relative">
               <input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="Enter your phone number"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
                 required
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                          placeholder-gray-500 text-gray-900 
-                          focus:outline-none focus:ring-2 focus:ring-primary 
-                          focus:border-primary transition-all duration-200
-                          text-base sm:text-lg"
+                className="w-full px-4 py-3.5 rounded-xl text-lg
+                         bg-[#D9C091]/5 border-2 border-[#778C6D]/20 
+                         text-[#2E4034] placeholder-[#778C6D]/50
+                         focus:border-[#465947] focus:bg-white/50
+                         focus:ring-2 focus:ring-[#465947]/20 
+                         transition-all duration-300 outline-none"
               />
-            </div>
-
-            {showOtpInput && (
-              <div className="transition-all duration-300 ease-in-out">
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="Enter OTP"
-                  required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                            placeholder-gray-500 text-gray-900 
-                            focus:outline-none focus:ring-2 focus:ring-primary 
-                            focus:border-primary transition-all duration-200
-                            text-base sm:text-lg"
+              <svg
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#778C6D]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
-              </div>
-            )}
+              </svg>
+            </div>
           </div>
 
           <button
             type="submit"
-            className="w-full py-3 px-4 text-base sm:text-lg font-medium 
-                     rounded-lg text-white bg-primary 
-                     hover:bg-secondary focus:outline-none 
-                     focus:ring-2 focus:ring-offset-2 focus:ring-primary 
-                     transition-colors duration-200
-                     active:transform active:scale-[0.98]"
+            disabled={loading}
+            className="w-full py-3.5 px-4 text-lg font-medium rounded-xl text-white
+                     transition-all duration-300 hover:shadow-lg 
+                     transform hover:-translate-y-0.5
+                     disabled:opacity-50 disabled:cursor-not-allowed
+                     bg-gradient-to-r from-[#2E4034] to-[#465947]
+                     hover:from-[#465947] hover:to-[#2E4034]
+                     focus:ring-2 focus:ring-[#778C6D]/50 focus:ring-offset-2
+                     focus:ring-offset-white/90"
           >
-            {showOtpInput ? "Verify OTP" : "Send OTP"}
+            {loading ? (
+              <div className="flex items-center justify-center space-x-2">
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                <span>Sending Magic Link...</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center space-x-2">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                  />
+                </svg>
+                <span>Sign in with Email</span>
+              </div>
+            )}
           </button>
+
+          <p className="text-center text-sm text-[#778C6D]">
+            We'll send you a magic link to sign in securely
+          </p>
         </form>
 
-        <div className="space-y-4 sm:space-y-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center">
-              <span className="px-4 text-sm sm:text-base bg-gray-50 text-gray-500">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              type="button"
-              className="w-full flex items-center justify-center py-3 px-4 
-                       border border-gray-300 rounded-lg shadow-sm bg-white 
-                       text-sm sm:text-base font-medium text-gray-500 
-                       hover:bg-gray-50 transition-colors duration-200
-                       active:transform active:scale-[0.98]"
-            >
-              Google
-            </button>
-            <button
-              type="button"
-              className="w-full flex items-center justify-center py-3 px-4 
-                       border border-gray-300 rounded-lg shadow-sm bg-white 
-                       text-sm sm:text-base font-medium text-gray-500 
-                       hover:bg-gray-50 transition-colors duration-200
-                       active:transform active:scale-[0.98]"
-            >
-              Apple
-            </button>
-          </div>
+        {/* Footer */}
+        <div className="text-center space-y-4">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-[#778C6D]/20 to-transparent" />
+          <p className="text-xs text-[#778C6D]">
+            By signing in, you agree to our Terms of Service and Privacy Policy
+          </p>
         </div>
       </div>
     </div>
