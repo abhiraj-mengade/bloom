@@ -17,53 +17,20 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Root route - redirect to dashboard if authenticated, otherwise to login */}
-        <Route
-          path="/"
-          element={
-            <AuthWrapper>
-              <Navigate to="/dashboard" replace />
-            </AuthWrapper>
-          }
-        />
-
         {/* Public Routes */}
         <Route path="/login" element={<AuthScreen />} />
 
-        {/* Protected Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <AuthWrapper>
-              <Dashboard />
-            </AuthWrapper>
-          }
-        />
-        <Route
-          path="/friends"
-          element={
-            <AuthWrapper>
-              <FriendManagement />
-            </AuthWrapper>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <AuthWrapper>
-              <Profile />
-            </AuthWrapper>
-          }
-        />
-        <Route
-          path="/wishlist"
-          element={
-            <AuthWrapper>
-              <Wishlist />
-            </AuthWrapper>
-          }
-        />
-        <Route path="/gift-store" element={<GiftStore />} />
+        {/* Protected Routes with AuthWrapper */}
+        <Route element={<AuthWrapper />}>
+          {/* Root route - redirect to dashboard */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/friends" element={<FriendManagement />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/gift-store" element={<GiftStore />} />
+        </Route>
 
         {/* Catch all route - redirect to login */}
         <Route path="*" element={<Navigate to="/login" replace />} />

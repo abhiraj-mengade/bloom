@@ -1,60 +1,54 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import type { User } from "@supabase/supabase-js";
 
-interface AuthWrapperProps {
-  children: React.ReactNode;
-}
-
-const AuthWrapper = ({ children }: AuthWrapperProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+const AuthWrapper = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const location = useLocation();
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    checkUser();
 
-    // Listen for changes on auth state (signed in, signed out, etc.)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Set up auth state listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsAuthenticated(!!session);
+      }
+    );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
+  async function checkUser() {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+      setIsAuthenticated(false);
     }
-  }, [user, loading, navigate]);
+  }
 
-  if (loading) {
+  // Show loading state while checking auth
+  if (isAuthenticated === null) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "#E2D4A7" }}
-      >
-        <div
-          className="animate-spin rounded-full h-12 w-12 border-b-2"
-          style={{ borderColor: "#324539" }}
-        ></div>
+      <div className="min-h-screen bg-[#2E4034] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#D9C091] border-t-transparent"></div>
       </div>
     );
   }
 
-  if (!user) {
-    return null;
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  return <>{children}</>;
+  // Render protected routes
+  return <Outlet />;
 };
 
 export default AuthWrapper;
