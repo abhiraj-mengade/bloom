@@ -17,6 +17,16 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        {/* Root route - redirect to dashboard if authenticated, otherwise to login */}
+        <Route
+          path="/"
+          element={
+            <AuthWrapper>
+              <Navigate to="/dashboard" replace />
+            </AuthWrapper>
+          }
+        />
+
         {/* Public Routes */}
         <Route path="/login" element={<AuthScreen />} />
 
@@ -54,16 +64,6 @@ const App = () => {
           }
         />
         <Route path="/gift-store" element={<GiftStore />} />
-
-        {/* Root route - redirect to dashboard if authenticated, otherwise to login */}
-        <Route
-          path="/"
-          element={
-            <AuthWrapper>
-              <Navigate to="/dashboard" replace />
-            </AuthWrapper>
-          }
-        />
 
         {/* Catch all route - redirect to login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
