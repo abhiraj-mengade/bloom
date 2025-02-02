@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import type { Friend, Event } from "../lib/supabase";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 const FriendManagement = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -27,6 +28,11 @@ const FriendManagement = () => {
 
   // Add user state
   const [userId, setUserId] = useState<string | null>(null);
+
+  // Add new state for editing events
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+
+  const navigate = useNavigate();
 
   // First useEffect to get current user
   useEffect(() => {
@@ -136,36 +142,84 @@ const FriendManagement = () => {
     e.preventDefault();
     if (!userId || !selectedFriend) return;
 
-    const { error } = await supabase.from("events").insert([
-      {
-        ...eventForm,
-        friend_id: selectedFriend.id,
-        user_id: userId, // Add user_id to new event
-      },
-    ]);
-    if (!error) {
+    try {
+      if (editingEvent) {
+        // Handle event update
+        const { error } = await supabase
+          .from("events")
+          .update({
+            name: eventForm.name,
+            date: eventForm.date,
+          })
+          .eq("id", editingEvent.id)
+          .eq("user_id", userId);
+
+        if (error) throw error;
+      } else {
+        // Handle new event creation
+        const { error } = await supabase.from("events").insert([
+          {
+            ...eventForm,
+            friend_id: selectedFriend.id,
+            user_id: userId,
+          },
+        ]);
+
+        if (error) throw error;
+      }
+
+      // Reset form and state
+      setEventForm({ name: "", date: "", friend_id: "" });
       setIsAddingEvent(false);
       setSelectedFriend(null);
+      setEditingEvent(null);
       fetchEvents();
-    } else {
-      console.error("Error adding event:", error);
+    } catch (error) {
+      console.error("Error handling event submission:", error);
+      alert("Error saving event. Please try again.");
     }
-    setEventForm({ name: "", date: "", friend_id: "" });
+  };
+
+  // Add this to handle edit button click
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setSelectedFriend(event.friend as Friend);
+    setIsAddingEvent(true);
+    setEventForm({
+      name: event.name,
+      date: event.date,
+      friend_id: event.friend_id,
+    });
   };
 
   // Update delete functions to include user_id check
   const handleDeleteFriend = async (friendId: string) => {
     if (!userId) return;
 
-    const { error } = await supabase
-      .from("friends")
-      .delete()
-      .eq("id", friendId)
-      .eq("user_id", userId); // Add user_id check
-    if (!error) {
+    try {
+      // First delete all events associated with this friend
+      const { error: eventsError } = await supabase
+        .from("events")
+        .delete()
+        .eq("friend_id", friendId)
+        .eq("user_id", userId);
+
+      if (eventsError) throw eventsError;
+
+      // Then delete the friend
+      const { error: friendError } = await supabase
+        .from("friends")
+        .delete()
+        .eq("id", friendId)
+        .eq("user_id", userId);
+
+      if (friendError) throw friendError;
+
+      // Refresh both lists
       fetchFriends();
-    } else {
-      console.error("Error deleting friend:", error);
+      fetchEvents();
+    } catch (error) {
+      console.error("Error deleting friend and events:", error);
     }
   };
 
@@ -192,6 +246,28 @@ const FriendManagement = () => {
   return (
     <div className="min-h-screen bg-[#2E4034] p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Navigation */}
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center text-white/80 hover:text-white 
+                   transition-colors duration-200 mb-4"
+        >
+          <svg
+            className="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          Back to Dashboard
+        </button>
+
         {/* Header */}
         <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-[#778C6D]/20">
           <h1
@@ -394,42 +470,86 @@ const FriendManagement = () => {
                          border border-[#778C6D]/20 hover:shadow-lg
                          transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-[#465947]">
-                    {event.name}
-                  </h3>
-                  <p className="text-[#778C6D] flex items-center text-sm">
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                <div className="flex justify-between items-start">
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-[#465947]">
+                      {event.name}
+                    </h3>
+                    <p className="text-[#778C6D] flex items-center text-sm">
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      {formatDate(event.date)}
+                    </p>
+                    <p className="text-[#778C6D] flex items-center text-sm">
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                      {event.friend?.name}
+                    </p>
+                  </div>
+                  <div className="flex flex-col space-y-2">
+                    <button
+                      onClick={() => handleEditEvent(event)}
+                      className="p-2 rounded-full hover:bg-[#778C6D]/10
+                               text-[#778C6D] transition-colors duration-200"
+                      title="Edit Event"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    {formatDate(event.date)}
-                  </p>
-                  <p className="text-[#778C6D] flex items-center text-sm">
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEvent(event.id)}
+                      className="p-2 rounded-full hover:bg-red-50
+                               text-red-600 transition-colors duration-200"
+                      title="Delete Event"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                    {event.friend?.name}
-                  </p>
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -539,7 +659,9 @@ const FriendManagement = () => {
                           border border-[#778C6D]/20"
             >
               <h2 className="text-xl font-semibold mb-4 text-[#465947]">
-                Add Event for {selectedFriend.name}
+                {editingEvent
+                  ? "Edit Event"
+                  : `Add Event for ${selectedFriend.name}`}
               </h2>
               <form onSubmit={handleEventSubmit} className="space-y-4">
                 <input
@@ -556,6 +678,7 @@ const FriendManagement = () => {
                   required
                 />
                 <input
+                  title="Date"
                   type="date"
                   value={eventForm.date}
                   onChange={(e) =>
@@ -574,13 +697,15 @@ const FriendManagement = () => {
                              hover:bg-[#2E4034] transition-all duration-300
                              transform hover:-translate-y-0.5 hover:shadow-lg"
                   >
-                    Add Event
+                    {editingEvent ? "Save Changes" : "Add Event"}
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setIsAddingEvent(false);
                       setSelectedFriend(null);
+                      setEditingEvent(null);
+                      setEventForm({ name: "", date: "", friend_id: "" });
                     }}
                     className="flex-1 bg-[#D9C6A3]/20 text-[#465947] py-2.5 rounded-lg
                              hover:bg-[#D9C6A3]/30 transition-all duration-300"

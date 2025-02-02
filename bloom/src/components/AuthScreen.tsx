@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import { AuthError } from "@supabase/supabase-js";
 
 const AuthScreen = () => {
   const [email, setEmail] = useState("");
@@ -17,8 +18,8 @@ const AuthScreen = () => {
       });
       if (error) throw error;
       alert("Check your email for the login link!");
-    } catch (error) {
-      alert(error.message);
+    } catch (error: unknown) {
+      alert((error as AuthError).message || "An error occurred");
     } finally {
       setLoading(false);
     }

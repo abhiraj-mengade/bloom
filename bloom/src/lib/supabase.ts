@@ -18,6 +18,17 @@ export type Event = {
   id: string;
   name: string;
   date: string;
-  friend_id: string;
   user_id: string;
+  friend_id: string;
+  friend?: {
+    name: string;
+  };
 };
+
+export interface WishlistItem {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string;
+  created_at: string;
+}
