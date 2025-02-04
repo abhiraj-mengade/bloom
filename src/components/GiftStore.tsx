@@ -13,13 +13,33 @@ type Gift = {
   image_url: string;
 };
 
+type Friend = {
+  id: string;
+  name: string;
+};
+
+type Event = {
+  id: string;
+  name: string;
+  date: string;
+  friend_id: string;
+};
+
 const GiftStore = () => {
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedGift, setSelectedGift] = useState<Gift | null>(null);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [selectedFriend, setSelectedFriend] = useState<string>("");
+  const [selectedEvent, setSelectedEvent] = useState<string>("");
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchGifts();
+    fetchFriends();
   }, []);
 
   const fetchGifts = async () => {
@@ -35,6 +55,83 @@ const GiftStore = () => {
       console.error("Error fetching gifts:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFriends = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("friends")
+        .select("id, name")
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      setFriends(data || []);
+    } catch (error) {
+      console.error("Error fetching friends:", error);
+    }
+  };
+
+  const fetchEvents = async (friendId: string) => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("events")
+        .select("id, name, date, friend_id")
+        .eq("friend_id", friendId)
+        .gte("date", new Date().toISOString())
+        .order("date");
+
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    }
+  };
+
+  const handleGiftClick = (gift: Gift) => {
+    setSelectedGift(gift);
+    setShowRequestForm(true);
+    setRequestSent(false);
+  };
+
+  const handleFriendChange = (friendId: string) => {
+    setSelectedFriend(friendId);
+    setSelectedEvent("");
+    fetchEvents(friendId);
+  };
+
+  const handleSubmitRequest = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.from("gift_requests").insert([
+        {
+          user_id: user.id,
+          gift_id: selectedGift?.id,
+          friend_id: selectedFriend,
+          event_id: selectedEvent,
+          status: "pending",
+        },
+      ]);
+
+      if (error) throw error;
+      setRequestSent(true);
+    } catch (error) {
+      console.error("Error submitting request:", error);
+      alert("Failed to submit request. Please try again.");
     }
   };
 
@@ -80,6 +177,113 @@ const GiftStore = () => {
           </p>
         </div>
 
+        {/* Request Form Modal */}
+        {showRequestForm && selectedGift && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full">
+              {!requestSent ? (
+                <>
+                  <h2 className="text-2xl font-semibold text-[#465947] mb-4">
+                    Request Gift
+                  </h2>
+                  <p className="text-[#778C6D] mb-6">
+                    Selected Gift: {selectedGift.name}
+                  </p>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[#465947] mb-2">
+                        Select Friend
+                      </label>
+                      <select
+                        title="Select Friend"
+                        value={selectedFriend}
+                        onChange={(e) => handleFriendChange(e.target.value)}
+                        className="w-full p-2 border rounded-lg"
+                      >
+                        <option value="">Choose a friend</option>
+                        {friends.map((friend) => (
+                          <option key={friend.id} value={friend.id}>
+                            {friend.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {selectedFriend && (
+                      <div>
+                        <label className="block text-[#465947] mb-2">
+                          Select Event
+                        </label>
+                        <select
+                          title="Select Event"
+                          value={selectedEvent}
+                          onChange={(e) => setSelectedEvent(e.target.value)}
+                          className="w-full p-2 border rounded-lg"
+                        >
+                          <option value="">Choose an event</option>
+                          {events.map((event) => (
+                            <option key={event.id} value={event.id}>
+                              {event.name} (
+                              {new Date(event.date).toLocaleDateString()})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end space-x-3 mt-6">
+                      <button
+                        onClick={() => setShowRequestForm(false)}
+                        className="px-4 py-2 text-[#465947] hover:bg-gray-100 rounded-lg"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSubmitRequest}
+                        disabled={!selectedFriend || !selectedEvent}
+                        className="px-4 py-2 bg-gradient-to-r from-[#465947] to-[#2E4034] 
+                                 text-white rounded-lg disabled:opacity-50"
+                      >
+                        Submit Request
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-6">
+                  <svg
+                    className="w-16 h-16 text-green-500 mx-auto mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <h2 className="text-2xl font-semibold text-[#465947] mb-2">
+                    Request Sent!
+                  </h2>
+                  <p className="text-[#778C6D] mb-6">
+                    Our team will contact you soon about your gift request.
+                  </p>
+                  <button
+                    onClick={() => setShowRequestForm(false)}
+                    className="px-6 py-2 bg-gradient-to-r from-[#465947] to-[#2E4034] 
+                             text-white rounded-lg"
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Gift Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading
@@ -97,9 +301,11 @@ const GiftStore = () => {
             : gifts.map((gift) => (
                 <div
                   key={gift.id}
+                  onClick={() => handleGiftClick(gift)}
                   className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg 
                          border border-[#778C6D]/20 overflow-hidden
-                         transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                         transition-all duration-300 hover:-translate-y-1 hover:shadow-xl
+                         cursor-pointer"
                 >
                   <div className="aspect-w-16 aspect-h-9 bg-[#D9C6A3]/10">
                     {gift.image_url && (

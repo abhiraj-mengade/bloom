@@ -95,6 +95,31 @@ const Dashboard = () => {
             </button>
 
             <button
+              onClick={() => navigate("/giftstore")}
+              className="flex items-center px-4 py-3
+                       bg-gradient-to-r from-[#465947] to-[#2E4034]
+                       text-white rounded-lg hover:shadow-lg transition-all duration-300
+                       transform hover:-translate-y-0.5"
+            >
+              <svg
+                className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M20 7h-7m0 0v7m0-7l7 7m-7-7l-7 7"
+                />
+              </svg>
+              <span className="ml-3 text-base sm:text-lg font-medium">
+                Gift Store
+              </span>
+            </button>
+
+            <button
               onClick={() => navigate("/friends")}
               className="flex items-center px-4 py-3
                        bg-gradient-to-r from-[#465947] to-[#2E4034]
