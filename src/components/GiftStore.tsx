@@ -179,16 +179,51 @@ const GiftStore = () => {
 
         {/* Request Form Modal */}
         {showRequestForm && selectedGift && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl p-6 max-w-md w-full">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full m-4 relative">
+              <button
+                title="Close"
+                onClick={() => setShowRequestForm(false)}
+                className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+
               {!requestSent ? (
                 <>
-                  <h2 className="text-2xl font-semibold text-[#465947] mb-4">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-[#465947] mb-4">
                     Request Gift
                   </h2>
-                  <p className="text-[#778C6D] mb-6">
-                    Selected Gift: {selectedGift.name}
-                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                    <div className="w-24 h-24 rounded-lg overflow-hidden">
+                      <img
+                        src={selectedGift.image_url}
+                        alt={selectedGift.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[#465947] font-medium">
+                        {selectedGift.name}
+                      </p>
+                      <p className="text-[#778C6D] text-sm">
+                        ${selectedGift.price.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
 
                   <div className="space-y-4">
                     <div>
@@ -285,7 +320,7 @@ const GiftStore = () => {
         )}
 
         {/* Gift Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {loading
             ? // Loading skeleton
               [...Array(6)].map((_, i) => (
@@ -301,22 +336,20 @@ const GiftStore = () => {
             : gifts.map((gift) => (
                 <div
                   key={gift.id}
-                  onClick={() => handleGiftClick(gift)}
                   className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg 
                          border border-[#778C6D]/20 overflow-hidden
-                         transition-all duration-300 hover:-translate-y-1 hover:shadow-xl
-                         cursor-pointer"
+                         transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
                   <div className="aspect-w-16 aspect-h-9 bg-[#D9C6A3]/10">
                     {gift.image_url && (
                       <img
                         src={gift.image_url}
                         alt={gift.name}
-                        className="object-cover w-full h-full"
+                        className="object-cover w-full h-48"
                       />
                     )}
                   </div>
-                  <div className="p-6 space-y-4">
+                  <div className="p-4 sm:p-6 space-y-4">
                     <div className="flex justify-between items-start">
                       <div>
                         <h3 className="text-xl font-semibold text-[#465947]">
@@ -349,6 +382,14 @@ const GiftStore = () => {
                           : "Out of stock"}
                       </span>
                     </div>
+
+                    <button
+                      onClick={() => handleGiftClick(gift)}
+                      className="w-full mt-4 px-4 py-2 bg-gradient-to-r from-[#465947] to-[#2E4034] 
+                               text-white rounded-lg hover:opacity-90 transition-opacity"
+                    >
+                      Request Gift
+                    </button>
                   </div>
                 </div>
               ))}
