@@ -95,7 +95,7 @@ const Dashboard = () => {
             </button>
 
             <button
-              onClick={() => navigate("/giftstore")}
+              onClick={() => navigate("/gift-store")}
               className="flex items-center px-4 py-3
                        bg-gradient-to-r from-[#465947] to-[#2E4034]
                        text-white rounded-lg hover:shadow-lg transition-all duration-300
