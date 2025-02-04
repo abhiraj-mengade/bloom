@@ -31,4 +31,13 @@ export interface WishlistItem {
   name: string;
   description: string;
   created_at: string;
+  is_public: boolean;
+}
+
+export interface SearchResult {
+  id: string;
+  name: string;
+  phone: string;
+  wishlist: WishlistItem[];
+  is_friend: boolean;
 }
