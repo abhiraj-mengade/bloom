@@ -8,6 +8,7 @@ type SearchResult = {
   name: string;
   phone: string;
   wishlist: WishlistItem[];
+  is_friend: boolean;
 };
 
 const Wishlist = () => {
@@ -17,6 +18,8 @@ const Wishlist = () => {
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [newItem, setNewItem] = useState({ name: "", description: "" });
   const [isLoading, setIsLoading] = useState(true);
+  const [isPublic, setIsPublic] = useState(true);
+  const [hasSearched, setHasSearched] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,6 +65,12 @@ const Wishlist = () => {
     if (!searchQuery.trim()) return;
 
     try {
+      setHasSearched(true);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
       // First get the profiles that match the search query
       const { data: profiles, error: profileError } = await supabase
         .from("profiles")
@@ -76,24 +85,42 @@ const Wishlist = () => {
         return;
       }
 
-      // Then get the wishlists for these profiles
-      const profileIds = profiles.map((profile) => profile.id);
+      // Get user's friends list with phone numbers
+      const { data: friends } = await supabase
+        .from("friends")
+        .select("contact")
+        .eq("user_id", user.id);
+
+      // Create array of friend phone numbers
+      const friendPhones = friends?.map((f) => f.contact) || [];
+
+      // Get wishlists with visibility control
       const { data: wishlistItems, error: wishlistError } = await supabase
         .from("wishlist")
         .select("*")
-        .in("user_id", profileIds);
+        .in(
+          "user_id",
+          profiles.map((p) => p.id)
+        );
 
       if (wishlistError) throw wishlistError;
 
-      // Combine the data
-      const formattedResults = profiles.map((profile) => ({
-        ...profile,
-        wishlist:
-          wishlistItems?.filter((item) => item.user_id === profile.id) || [],
-      }));
+      // Combine the data with friendship status based on phone numbers
+      const formattedResults = profiles.map((profile) => {
+        const isFriend = friendPhones.includes(profile.phone);
+        const profileWishlist =
+          wishlistItems?.filter(
+            (item) =>
+              item.user_id === profile.id && (item.is_public || isFriend)
+          ) || [];
 
-      // Filter out profiles without wishlists if needed
-      // const resultsWithWishlists = formattedResults.filter(profile => profile.wishlist.length > 0);
+        return {
+          ...profile,
+          wishlist: profileWishlist,
+          is_friend: isFriend,
+        };
+      });
+
       setSearchResults(formattedResults);
     } catch (error) {
       console.error("Error searching:", error);
@@ -130,6 +157,7 @@ const Wishlist = () => {
             user_id: user.id,
             name: newItem.name,
             description: newItem.description,
+            is_public: isPublic,
           },
         ])
         .select();
@@ -285,6 +313,11 @@ const Wishlist = () => {
                         <h3 className="text-xl font-semibold text-[#465947]">
                           {profile.name}
                         </h3>
+                        {profile.is_friend && (
+                          <span className="text-sm text-[#778C6D] ml-2">
+                            (Friend)
+                          </span>
+                        )}
                       </div>
                       <div className="bg-[#465947]/10 px-3 py-1 rounded-full">
                         <span className="text-sm text-[#465947]">
@@ -300,9 +333,16 @@ const Wishlist = () => {
                             className="bg-white/50 p-4 rounded-lg border border-[#778C6D]/10
                                      hover:shadow-md transition-all duration-200"
                           >
-                            <h4 className="font-medium text-[#465947]">
-                              {item.name}
-                            </h4>
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium text-[#465947]">
+                                {item.name}
+                                {!item.is_public && (
+                                  <span className="ml-2 text-xs text-[#778C6D] bg-[#778C6D]/10 px-2 py-1 rounded-full">
+                                    Friends Only
+                                  </span>
+                                )}
+                              </h4>
+                            </div>
                             <p className="text-[#778C6D] mt-1">
                               {item.description}
                             </p>
@@ -322,6 +362,7 @@ const Wishlist = () => {
                 ))}
               </div>
             ) : (
+              hasSearched &&
               searchQuery.trim() !== "" && (
                 <div className="mt-6 p-4 bg-[#D9C6A3]/10 rounded-lg border border-[#D9C6A3]/20">
                   <p className="text-[#465947] text-center">
@@ -372,6 +413,27 @@ const Wishlist = () => {
                   maxLength={200}
                   rows={3}
                 />
+
+                {/* Visibility Toggle */}
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsPublic(!isPublic)}
+                    className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                      isPublic
+                        ? "bg-[#465947] text-white"
+                        : "bg-[#D9C6A3]/20 text-[#465947]"
+                    }`}
+                  >
+                    {isPublic ? "Public" : "Friends Only"}
+                  </button>
+                  <span className="text-sm text-[#778C6D]">
+                    {isPublic
+                      ? "Everyone can see this item"
+                      : "Only your friends can see this item"}
+                  </span>
+                </div>
+
                 <button
                   onClick={addWishlistItem}
                   className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#465947] to-[#2E4034] 
