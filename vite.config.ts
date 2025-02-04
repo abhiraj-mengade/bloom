@@ -7,13 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "prompt",
-      includeAssets: [
-        "favicon.ico",
-        "apple-touch-icon.png",
-        "masked-icon.svg",
-        "bloom.png",
-      ],
+      registerType: "autoUpdate",
       manifest: {
         name: "Bloom - Your Personal Gifting Companion",
         short_name: "Bloom",
@@ -42,18 +36,12 @@ export default defineConfig({
             src: "/bloom.png",
             sizes: "180x180",
             type: "image/png",
-            purpose: "apple touch icon",
-          },
-          {
-            src: "/bloom.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
+            purpose: "any maskable",
           },
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -87,7 +75,6 @@ export default defineConfig({
       },
       devOptions: {
         enabled: true,
-        type: "module",
       },
     }),
   ],

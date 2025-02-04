@@ -285,7 +285,6 @@ const Wishlist = () => {
                         <h3 className="text-xl font-semibold text-[#465947]">
                           {profile.name}
                         </h3>
-                        <p className="text-[#778C6D]">{profile.phone}</p>
                       </div>
                       <div className="bg-[#465947]/10 px-3 py-1 rounded-full">
                         <span className="text-sm text-[#465947]">

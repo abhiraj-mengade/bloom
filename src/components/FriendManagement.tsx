@@ -4,6 +4,8 @@ import { supabase } from "../lib/supabase";
 import type { Friend, Event } from "../lib/supabase";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 const FriendManagement = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -596,19 +598,21 @@ const FriendManagement = () => {
                            transition-all duration-200"
                   required
                 />
-                <input
-                  type="text"
-                  placeholder="Contact"
-                  value={friendForm.contact}
-                  onChange={(e) =>
-                    setFriendForm({ ...friendForm, contact: e.target.value })
-                  }
-                  className="w-full p-3 bg-[#D9C6A3]/5 border border-[#778C6D]/20 rounded-lg
-                           text-[#2E4034] placeholder-[#778C6D]/50
-                           focus:ring-2 focus:ring-[#465947]/20 focus:border-[#465947]
-                           transition-all duration-200"
-                  required
-                />
+                <div className="group">
+                  <PhoneInput
+                    international
+                    defaultCountry="US"
+                    placeholder="Phone Number"
+                    value={friendForm.contact}
+                    onChange={(value) =>
+                      setFriendForm({ ...friendForm, contact: value || "" })
+                    }
+                    className="w-full p-3 bg-[#D9C6A3]/5 border border-[#778C6D]/20 rounded-lg
+                              text-[#2E4034] placeholder-[#778C6D]/50
+                              focus:ring-2 focus:ring-[#465947]/20 focus:border-[#465947]
+                              transition-all duration-200"
+                  />
+                </div>
                 <input
                   type="text"
                   placeholder="Interests"
@@ -717,6 +721,85 @@ const FriendManagement = () => {
             </div>
           </div>
         )}
+
+        {/* Add the phone input styles */}
+        <style>{`
+          .PhoneInput {
+            background: rgba(217, 198, 163, 0.05);
+            border: 1px solid rgba(119, 140, 109, 0.2);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            width: 100%;
+            color: #2E4034;
+            transition: all 0.2s;
+          }
+
+          .PhoneInput:focus-within {
+            border-color: #465947;
+            box-shadow: 0 0 0 2px rgba(70, 89, 71, 0.2);
+          }
+
+          .PhoneInput input {
+            background: transparent;
+            border: none;
+            color: #2E4034;
+            font-size: 1rem;
+            padding: 0;
+            margin-left: 0.5rem;
+            width: 100%;
+          }
+
+          .PhoneInput input:focus {
+            outline: none;
+          }
+
+          .PhoneInputCountrySelect {
+            background: transparent;
+            border: none;
+            color: #2E4034;
+            font-size: 1rem;
+            padding-right: 0.5rem;
+          }
+
+          .PhoneInputCountryIcon {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 0.25rem;
+            overflow: hidden;
+          }
+
+          .PhoneInputCountrySelectArrow {
+            color: #778C6D;
+            opacity: 0.7;
+            margin-left: 0.5rem;
+          }
+
+          /* Dropdown styles */
+          .PhoneInputCountrySelect option {
+            background: white;
+            color: #2E4034;
+            padding: 0.75rem;
+          }
+
+          /* Focus styles */
+          .PhoneInputCountrySelect:focus {
+            outline: none;
+          }
+
+          .PhoneInputCountrySelect:focus + .PhoneInputCountryIcon {
+            box-shadow: 0 0 0 2px rgba(70, 89, 71, 0.2);
+          }
+
+          /* Invalid number styles */
+          .PhoneInputInput[aria-invalid='true'] {
+            border-color: #EF4444;
+          }
+
+          /* Valid number styles */
+          .PhoneInputInput[aria-invalid='false'] {
+            border-color: #10B981;
+          }
+        `}</style>
       </div>
     </div>
   );

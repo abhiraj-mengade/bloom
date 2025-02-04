@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
-import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 // interface ProfileData {
 //   id: string;
@@ -161,7 +161,7 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* Phone Input */}
+              {/* New Phone Input */}
               <div className="group">
                 <label
                   className="block text-[#465947] font-medium mb-2 group-focus-within:text-[#2E4034]
@@ -169,49 +169,13 @@ export default function Profile() {
                 >
                   Phone Number
                 </label>
-                <div className="relative phone-input-container">
+                <div className="phone-input-container">
                   <PhoneInput
-                    country={"us"}
+                    international
+                    defaultCountry="US"
                     value={phone}
-                    onChange={(phone) => setPhone(phone)}
-                    containerClass="w-full"
-                    searchClass="search-class"
-                    enableSearch={true}
-                    disableSearchIcon={false}
-                    inputStyle={{
-                      width: "100%",
-                      background: "rgba(217, 198, 163, 0.05)",
-                      border: "1px solid rgba(119, 140, 109, 0.2)",
-                      color: "#2E4034",
-                      borderRadius: "0.5rem",
-                      padding: "0.75rem 0.75rem 0.75rem 3.5rem",
-                      fontSize: "1rem",
-                      height: "3.5rem",
-                    }}
-                    buttonStyle={{
-                      background: "rgba(217, 198, 163, 0.1)",
-                      border: "1px solid rgba(119, 140, 109, 0.2)",
-                      borderRight: "none",
-                      borderRadius: "0.5rem 0 0 0.5rem",
-                      padding: "0.75rem",
-                    }}
-                    dropdownStyle={{
-                      width: "350px",
-                      maxHeight: "400px",
-                      background: "#FFFFFF",
-                      border: "1px solid rgba(119, 140, 109, 0.2)",
-                      borderRadius: "0.5rem",
-                      boxShadow:
-                        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                    }}
-                    searchStyle={{
-                      width: "calc(100% - 1rem)",
-                      margin: "0.5rem",
-                      padding: "0.75rem",
-                      border: "1px solid rgba(119, 140, 109, 0.2)",
-                      borderRadius: "0.5rem",
-                      backgroundColor: "rgba(217, 198, 163, 0.05)",
-                    }}
+                    onChange={(value) => setPhone(value || "")}
+                    className="custom-phone-input"
                   />
                 </div>
               </div>
@@ -231,103 +195,82 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Global styles */}
+      {/* Updated styles for the new phone input */}
       <style>{`
-        .phone-input-container {
+        .custom-phone-input {
+          background: rgba(217, 198, 163, 0.05);
+          border: 1px solid rgba(119, 140, 109, 0.2);
+          border-radius: 0.5rem;
+          padding: 0.75rem;
+          width: 100%;
+          color: #2E4034;
+          transition: all 0.2s;
+        }
+
+        .custom-phone-input:focus-within {
+          border-color: #465947;
+          box-shadow: 0 0 0 2px rgba(70, 89, 71, 0.2);
+        }
+
+        .custom-phone-input input {
+          background: transparent;
+          border: none;
+          color: #2E4034;
+          font-size: 1rem;
+          padding: 0;
+          margin-left: 0.5rem;
           width: 100%;
         }
 
-        .react-tel-input {
-          width: 100% !important;
+        .custom-phone-input input:focus {
+          outline: none;
         }
 
-        .react-tel-input .country-list {
-          width: 350px !important;
-          background-color: white !important;
-          border: 1px solid rgba(119, 140, 109, 0.2) !important;
-          border-radius: 0.5rem !important;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-          margin-top: 0.25rem !important;
-          max-height: 400px !important;
-          overflow-y: auto !important;
-          scrollbar-width: thin !important;
-          scrollbar-color: #778c6d transparent !important;
-          z-index: 50 !important;
+        .PhoneInputCountrySelect {
+          background: transparent;
+          border: none;
+          color: #2E4034;
+          font-size: 1rem;
+          padding-right: 0.5rem;
         }
 
-        .react-tel-input .country-list .country {
-          padding: 0.75rem !important;
-          color: #2e4034 !important;
-          display: flex !important;
-          align-items: center !important;
+        .PhoneInputCountryIcon {
+          width: 1.5rem;
+          height: 1.5rem;
+          border-radius: 0.25rem;
+          overflow: hidden;
         }
 
-        .react-tel-input .country-list .country:hover,
-        .react-tel-input .country-list .country.highlight {
-          background-color: rgba(217, 198, 163, 0.1) !important;
+        .PhoneInputCountrySelectArrow {
+          color: #778C6D;
+          opacity: 0.7;
+          margin-left: 0.5rem;
         }
 
-        .react-tel-input .country-list .country.highlight {
-          background-color: rgba(70, 89, 71, 0.1) !important;
+        /* Dropdown styles */
+        .PhoneInputCountrySelect option {
+          background: white;
+          color: #2E4034;
+          padding: 0.75rem;
         }
 
-        .react-tel-input .country-list .country .dial-code {
-          color: #778c6d !important;
-          margin-left: auto !important;
+        /* Focus styles */
+        .PhoneInputCountrySelect:focus {
+          outline: none;
         }
 
-        .react-tel-input .search-class {
-          width: calc(100% - 1rem) !important;
-          margin: 0.5rem !important;
-          padding: 0.75rem !important;
-          border: 1px solid rgba(119, 140, 109, 0.2) !important;
-          border-radius: 0.5rem !important;
-          background-color: rgba(217, 198, 163, 0.05) !important;
-          color: #2e4034 !important;
-          font-size: 1rem !important;
+        .PhoneInputCountrySelect:focus + .PhoneInputCountryIcon {
+          box-shadow: 0 0 0 2px rgba(70, 89, 71, 0.2);
         }
 
-        .react-tel-input .search-class:focus {
-          outline: none !important;
-          border-color: #465947 !important;
-          box-shadow: 0 0 0 2px rgba(70, 89, 71, 0.2) !important;
+        /* Invalid number styles */
+        .PhoneInputInput[aria-invalid='true'] {
+          border-color: #EF4444;
         }
 
-        .react-tel-input .country-list .search-box {
-          padding: 0.5rem !important;
-          margin: 0 !important;
-        }
-
-        .react-tel-input .country-list::-webkit-scrollbar {
-          width: 6px !important;
-        }
-
-        .react-tel-input .country-list::-webkit-scrollbar-track {
-          background: transparent !important;
-        }
-
-        .react-tel-input .country-list::-webkit-scrollbar-thumb {
-          background-color: #778c6d !important;
-          border-radius: 3px !important;
-        }
-
-        .react-tel-input .flag-dropdown {
-          border-radius: 0.5rem 0 0 0.5rem !important;
-        }
-
-        .react-tel-input .selected-flag {
-          padding: 0 0.75rem !important;
-          border-radius: 0.5rem 0 0 0.5rem !important;
-        }
-
-        .react-tel-input .selected-flag:hover,
-        .react-tel-input .selected-flag:focus {
-          background-color: rgba(217, 198, 163, 0.1) !important;
-        }
-
-        .react-tel-input .flag-dropdown.open .selected-flag {
-          background-color: rgba(217, 198, 163, 0.1) !important;
-          border-radius: 0.5rem 0 0 0.5rem !important;
+        /* Valid number styles */
+        .PhoneInputInput[aria-invalid='false'] {
+          border-color: #10B981;
         }
       `}</style>
     </div>
